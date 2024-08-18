@@ -1,0 +1,12 @@
+module BmpZipperPlugin
+optional plugin bmp-zipper-plugin
+typeinfo plugins.qmltypes
+depends QtQuick
+prefer :/qt/qml/BmpZipperPlugin/
+
+singleton ColorMap 1.0 ColorMap.qml
+CustomButton 1.0 qml/CustomButton.qml
+CustomDialog 1.0 qml/CustomDialog.qml
+CustomDialogManager 1.0 qml/CustomDialogManager.qml
+FileListModelDelegate 1.0 qml/FileListModelDelegate.qml
+CustomProgressBar 1.0 qml/CustomProgressBar.qml
