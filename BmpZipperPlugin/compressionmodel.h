@@ -14,16 +14,16 @@ class CompressionModel : public QObject
     QML_ELEMENT
 
 public:
-    explicit CompressionModel(QObject* _parent = nullptr);
+    explicit CompressionModel(QObject* parent = nullptr);
 
-    Q_INVOKABLE void compress(const QString& _filePath);
-    Q_INVOKABLE void decompress(const QString& _filePath);
+    Q_INVOKABLE void compress(const QString& filePath);
+    Q_INVOKABLE void decompress(const QString& filePath);
 
 signals:
-    void errorOccured(const QString& _text);
+    void errorOccured(const QString& text);
 
 private:
-    void setProgressModel(ProgressModel* _model);
+    void setProgressModel(ProgressModel* model);
     ProgressModel* getProgressModel();
 
 private:
