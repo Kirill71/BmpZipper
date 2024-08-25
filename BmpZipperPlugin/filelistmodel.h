@@ -9,7 +9,8 @@ class QFileSystemWatcher;
 class QTimer;
 #endif
 
-namespace BmpZipper::Ui {
+namespace BmpZipper::Ui
+{
 
 class FileListModel : public QAbstractListModel
 {
@@ -17,7 +18,8 @@ class FileListModel : public QAbstractListModel
     Q_PROPERTY(QString folder READ getFolder WRITE setFolder NOTIFY folderChanged)
     QML_ELEMENT
 
-    enum FileRoles {
+    enum FileRoles
+    {
         FileNameRole = Qt::UserRole + 1,
         FilePathRole,
         FileSizeRole
@@ -27,9 +29,11 @@ public:
     explicit FileListModel(QObject* parent = nullptr);
 
     int rowCount(const QModelIndex& parent) const override;
+
     QVariant data(const QModelIndex& index, int role) const override;
 
     const QString& getFolder() const;
+
     void setFolder(const QString& folderPath);
 
     QHash<int, QByteArray> roleNames() const override;

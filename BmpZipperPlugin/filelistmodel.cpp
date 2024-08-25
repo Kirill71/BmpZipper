@@ -8,10 +8,11 @@
 #include <QTimer>
 #endif
 
-namespace BmpZipper::Ui {
+namespace BmpZipper::Ui
+{
 
-FileListModel::FileListModel(QObject* parent)
-    : QAbstractListModel(parent)
+FileListModel::FileListModel(QObject* parent) :
+    QAbstractListModel(parent)
     , m_watcher(new QFileSystemWatcher(this))
 #ifdef Q_OS_LINUX
     , m_timer(new QTimer(this))
@@ -27,7 +28,8 @@ FileListModel::FileListModel(QObject* parent)
 
 int FileListModel::rowCount(const QModelIndex& parent) const
 {
-    if (parent.isValid()) {
+    if (parent.isValid())
+    {
         return 0;
     }
 
@@ -47,13 +49,13 @@ QVariant FileListModel::data(const QModelIndex& index, const int role) const
     const QFileInfo fileInfo = m_fileInfoList.at(index.row());
     switch (role)
     {
-    case Qt::DisplayRole:
-    case FileNameRole:
-        return fileInfo.fileName();
-    case FilePathRole:
-        return fileInfo.filePath();
-    case FileSizeRole:
-        return toKbts(fileInfo.size());
+        case Qt::DisplayRole:
+        case FileNameRole:
+            return fileInfo.fileName();
+        case FilePathRole:
+            return fileInfo.filePath();
+        case FileSizeRole:
+            return toKbts(fileInfo.size());
     }
 
     return {};
@@ -66,13 +68,13 @@ const QString& FileListModel::getFolder() const
 
 void FileListModel::setFolder(const QString& folderPath)
 {
-    const QFile file {folderPath};
+    const QFile file{folderPath};
     auto checkedFolderPath = folderPath;
 
     if (!file.exists())
         checkedFolderPath = QDir::currentPath();
 
-    const QDir dir {checkedFolderPath};
+    const QDir dir{checkedFolderPath};
 
     if (!m_folder.isEmpty())
         m_watcher->removePath(m_folder);
@@ -80,9 +82,10 @@ void FileListModel::setFolder(const QString& folderPath)
     beginResetModel();
 
     m_fileInfoList.clear();
-    const QStringList filters {"*.png", "*.bmp", "*.barch"};
+    const QStringList filters{"*.png", "*.bmp", "*.barch"};
     QFileInfoList files = dir.entryInfoList(filters);
-    for (const auto &fileInfo : files) {
+    for (const auto& fileInfo: files)
+    {
         m_fileInfoList.append(fileInfo);
     }
 

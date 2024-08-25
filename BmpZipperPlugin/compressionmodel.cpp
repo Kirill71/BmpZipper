@@ -5,7 +5,8 @@
 #include <QDir>
 #include <thread>
 
-namespace {
+namespace
+{
 
 QString changeFileExtension(const QString& filePath, const QString& newExtension)
 {
@@ -30,7 +31,8 @@ bool removeFileIfExists(const QString& filePath)
     return true;
 }
 
-QString getUniqueFilePath(const QString& filePath, const QString& newExtension) {
+QString getUniqueFilePath(const QString& filePath, const QString& newExtension)
+{
     const QFileInfo fileInfo(filePath);
     const QString baseName = fileInfo.completeBaseName();
     const QString dir = fileInfo.absolutePath();
@@ -44,10 +46,11 @@ QString getUniqueFilePath(const QString& filePath, const QString& newExtension) 
 
 }
 
-namespace BmpZipper::Ui {
+namespace BmpZipper::Ui
+{
 
-CompressionModel::CompressionModel(QObject* parent)
-    : QObject(parent)
+CompressionModel::CompressionModel(QObject* parent) :
+    QObject(parent)
 {
 }
 
@@ -55,7 +58,7 @@ void CompressionModel::compress(const QString& filePath)
 {
     const QString extension = ".barch";
     const auto outFilePath = changeFileExtension(filePath, extension);
-    if(!removeFileIfExists(outFilePath))
+    if (!removeFileIfExists(outFilePath))
     {
         emit errorOccured("Unable to complete operation");
         return;
@@ -64,7 +67,7 @@ void CompressionModel::compress(const QString& filePath)
     auto progressModel = m_progressModel;
     assert(progressModel);
 
-    std::thread worker {[this, filePath, outFilePath, progressModel]
+    std::thread worker{[this, filePath, outFilePath, progressModel]
     {
         bool compressed = false;
         QString errorMsg = "Unable to compress file";
@@ -75,16 +78,16 @@ void CompressionModel::compress(const QString& filePath)
             const auto bmpImage = BmpProxy::createFromBmp(filePath.toStdString());
             compressed = bmpImage.compress(outFilePath.toStdString(), progressModel);
         }
-        catch(const FileError& _err)
+        catch (const FileError& _err)
         {
             errorMsg = _err.what();
         }
-        catch( ... )
+        catch (...)
         {
             errorMsg = "Unexpected Error";
         }
 
-        if(!compressed)
+        if (!compressed)
         {
             emit errorOccured(errorMsg);
         }
@@ -100,7 +103,7 @@ void CompressionModel::decompress(const QString& filePath)
     auto progressModel = m_progressModel;
     assert(progressModel);
 
-    std::thread worker {[this, filePath, outFilePath, progressModel]
+    std::thread worker{[this, filePath, outFilePath, progressModel]
     {
         bool decompressed = false;
         QString errorMsg = "Unable to decompress file";
@@ -111,16 +114,16 @@ void CompressionModel::decompress(const QString& filePath)
             const auto barchImage = BmpProxy::createFromBarch(filePath.toStdString());
             decompressed = barchImage.decompress(outFilePath.toStdString(), progressModel);
         }
-        catch(const FileError& err)
+        catch (const FileError& err)
         {
             errorMsg = err.what();
         }
-        catch( ... )
+        catch (...)
         {
             errorMsg = "Unexpected Error";
         }
 
-        if(!decompressed)
+        if (!decompressed)
         {
             emit errorOccured(errorMsg);
         }

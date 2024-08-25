@@ -55,8 +55,6 @@ Description: BmpZipper application for compressing/decompressing 8bit `*.bmp` fi
   * -v, --version          Displays version information.
   * -d, --dir <directory>  Scan `bmp`, `barch` and `png` files in `<directory>`.
 
-to run application use ./run.sh script which implicitly specify images folder with test pictures. If something is not working properly please check Demo.mp4 demonstration video.
-
 # Docker container
 
 Also, it's possible to download or build a docker container with the BmpZipper tool running inside.

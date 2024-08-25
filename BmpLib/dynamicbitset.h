@@ -4,7 +4,8 @@
 #include <cstdint>
 #include <cstddef>
 
-namespace BmpZipper {
+namespace BmpZipper
+{
 
 class DynamicBitset
 {
@@ -13,13 +14,17 @@ public:
     using block_t = std::uint8_t;
 
     DynamicBitset();
+
     DynamicBitset(std::size_t blocksCount, block_t blockValue);
+
     explicit DynamicBitset(std::vector<block_t>&& source) noexcept;
+
     DynamicBitset(const block_t* blockPtr, std::size_t numBlocks);
 
     void set(std::size_t bitIndex, bool value = true);
 
     void clear();
+
     void shrinkToFit();
 
     [[nodiscard]]

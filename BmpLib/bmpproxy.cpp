@@ -14,7 +14,8 @@
 #include <memory.h>
 
 
-namespace {
+namespace
+{
 
 constexpr std::size_t    INFO_HEADER_OFFSET       = sizeof(BmpZipper::BmpHeader);
 constexpr std::uint16_t  UNCOMPRESSED_SIGNATURE   = 0x4D42;
@@ -29,13 +30,13 @@ constexpr std::uint32_t  BLACK_4PIXELS            = 0x00000000;
 // The bit is set to 0 when row contains not only white pixels
 struct RowIndex
 {
-    explicit RowIndex(const std::size_t height)
-        : m_index(height / BmpZipper::DynamicBitset::BITS_PER_BLOCK, 0x00)
+    explicit RowIndex(const std::size_t height) :
+        m_index(height / BmpZipper::DynamicBitset::BITS_PER_BLOCK, 0x00)
     {
     }
 
-    explicit RowIndex(std::vector<std::uint8_t> && source)
-        : m_index(std::move(source))
+    explicit RowIndex(std::vector<std::uint8_t>&& source) :
+        m_index(std::move(source))
     {
     }
 
@@ -72,26 +73,26 @@ struct RowIndex
     {
         const int padding = BmpZipper::RawImageData::calculatePadding(width);
         std::vector whiteRowPattern(width + padding, WHITE_PIXEL);
-        for(int i = width; i < width + padding; ++i)
+        for (int i = width; i < width + padding; ++i)
             whiteRowPattern[i] = BLACK_PIXEL; // Fill whiteRowPattern with zero padding if needed
 
         return whiteRowPattern;
     }
 
     static RowIndex createFromRawImageData(
-        const BmpZipper::RawImageData raw,
-        BmpZipper::IProgressNotifier* progressNotifier = nullptr)
+            const BmpZipper::RawImageData raw,
+            BmpZipper::IProgressNotifier* progressNotifier = nullptr)
     {
         const auto whiteRowPattern = getWhiteRowPattern(raw.Width);
 
         RowIndex index(raw.getActualHeight());
-        const std::uint8_t * rowStartPtr = raw.Data;
-        for(int rowIndex = 0; rowIndex < raw.getActualHeight(); ++rowIndex)
+        const std::uint8_t* rowStartPtr = raw.Data;
+        for (int rowIndex = 0; rowIndex < raw.getActualHeight(); ++rowIndex)
         {
             index.setRowIsEmpty(rowIndex, memcmp(rowStartPtr, whiteRowPattern.data(), whiteRowPattern.size()) == 0);
 
             rowStartPtr += raw.getActualWidth();
-            if(progressNotifier)
+            if (progressNotifier)
             {
                 using namespace std::chrono_literals;
                 std::this_thread::sleep_for(1ms); // For progress bar demonstration
@@ -113,7 +114,8 @@ bool RollbackFile(const std::string& filePath, BmpZipper::FileHandler& file)
 
 } // namespace
 
-namespace BmpZipper {
+namespace BmpZipper
+{
 
 struct BmpProxy::ProxyImpl
 {
@@ -131,45 +133,52 @@ struct BmpProxy::ProxyImpl
 
         // BMP Header validation
         const bool headerReadCorrectly = fileHandler.read(&impl->m_header, sizeof(m_header)) == 1;
-        if(!headerReadCorrectly)
+        if (!headerReadCorrectly)
             throw InvalidBmpHeaderError();
-        if(impl->m_header.Signature != UNCOMPRESSED_SIGNATURE) // Check Signature = 'BM'
-            throw InvalidBmpHeaderError(std::string("Unexpected signature: ") + std::to_string(impl->m_header.Signature));
-        if(impl->m_header.FileSize != actualFileSize)
+        if (impl->m_header.Signature != UNCOMPRESSED_SIGNATURE) // Check Signature = 'BM'
+            throw InvalidBmpHeaderError(
+                    std::string("Unexpected signature: ") + std::to_string(impl->m_header.Signature));
+        if (impl->m_header.FileSize != actualFileSize)
             throw InvalidBmpHeaderError(std::string("File size mismatch: ") +
-                "actual[" + std::to_string(actualFileSize) + "] != expected[" + std::to_string(impl->m_header.FileSize) + "]"
-            );
-        if(impl->m_header.DataOffset < INFO_HEADER_OFFSET + sizeof(BmpInfoHeader))
-            throw InvalidBmpHeaderError(std::string("Invalid Data Offset: ") + std::to_string(impl->m_header.DataOffset));
+                                        "actual[" + std::to_string(actualFileSize) + "] != expected[" + std::to_string(
+                                                impl->m_header.FileSize) + "]"
+                    );
+        if (impl->m_header.DataOffset < INFO_HEADER_OFFSET + sizeof(BmpInfoHeader))
+            throw InvalidBmpHeaderError(
+                    std::string("Invalid Data Offset: ") + std::to_string(impl->m_header.DataOffset));
 
         // BMP Info Header validation
         const bool infoHeaderReadCorrectly = fileHandler.read(&impl->m_infoHeader, sizeof(m_infoHeader)) == 1;
-        if(!infoHeaderReadCorrectly)
+        if (!infoHeaderReadCorrectly)
             throw InvalidInfoHeaderError();
-        if(impl->m_infoHeader.Size < sizeof(BmpInfoHeader)) // Can be > sizeof(BmpInfoHeader) in new bmp versions
-            throw InvalidInfoHeaderError(std::string("Incorrect InfoHeader Size: " + std::to_string(impl->m_infoHeader.Size)));
-        if(impl->m_infoHeader.BitsPerPixel != 8)
+        if (impl->m_infoHeader.Size < sizeof(BmpInfoHeader)) // Can be > sizeof(BmpInfoHeader) in new bmp versions
+            throw InvalidInfoHeaderError(
+                    std::string("Incorrect InfoHeader Size: " + std::to_string(impl->m_infoHeader.Size)));
+        if (impl->m_infoHeader.BitsPerPixel != 8)
             throw InvalidInfoHeaderError(std::string("Only 8bit Bmp pictures are supported"));
-        if(impl->m_infoHeader.ImageSize != 0 && impl->m_infoHeader.Height * impl->m_infoHeader.Width > impl->m_infoHeader.ImageSize)
-            throw InvalidInfoHeaderError(std::string("Unexpected Image Size: " + std::to_string(impl->m_infoHeader.ImageSize)));
+        if (impl->m_infoHeader.ImageSize != 0 && impl->m_infoHeader.Height * impl->m_infoHeader.Width > impl->
+            m_infoHeader.ImageSize)
+            throw InvalidInfoHeaderError(
+                    std::string("Unexpected Image Size: " + std::to_string(impl->m_infoHeader.ImageSize)));
 
         const std::size_t colorTableOffset = INFO_HEADER_OFFSET + impl->m_infoHeader.Size;
         constexpr std::size_t bmpColorInfoSize = sizeof(std::uint32_t); // Bmp Color Structure
 
-        if(impl->m_header.DataOffset < colorTableOffset + impl->m_infoHeader.ColorsUsed * bmpColorInfoSize)
-            throw InvalidBmpHeaderError(std::string("Invalid Data Offset: ") + std::to_string(impl->m_header.DataOffset));
+        if (impl->m_header.DataOffset < colorTableOffset + impl->m_infoHeader.ColorsUsed * bmpColorInfoSize)
+            throw InvalidBmpHeaderError(
+                    std::string("Invalid Data Offset: ") + std::to_string(impl->m_header.DataOffset));
 
         const int padding = RawImageData::calculatePadding(static_cast<int>(impl->m_infoHeader.Width));
 
         // Read Pixel Data
         const std::size_t realPixelDataSize = impl->m_infoHeader.ImageSize
-            ? impl->m_infoHeader.ImageSize
-            : impl->m_infoHeader.Height * (impl->m_infoHeader.Width + padding);
+                                                  ? impl->m_infoHeader.ImageSize
+                                                  : impl->m_infoHeader.Height * (impl->m_infoHeader.Width + padding);
 
         impl->m_pixelData.resize(realPixelDataSize, 0x00);
         fileHandler.seek(SEEK_SET, impl->m_header.DataOffset);
         const bool pixelDataReadCorrectly = fileHandler.read(impl->m_pixelData.data(), impl->m_pixelData.size()) == 1;
-        if(!pixelDataReadCorrectly)
+        if (!pixelDataReadCorrectly)
             throw InvalidPixelDataError("Unable to read Pixel Data");
 
         return impl;
@@ -179,7 +188,7 @@ struct BmpProxy::ProxyImpl
     {
         auto impl = std::make_unique<ProxyImpl>();
         impl->m_filePath = filePath;
-        impl->m_fileHandler = FileHandler( filePath, "rb" );
+        impl->m_fileHandler = FileHandler(filePath, "rb");
 
         auto& fileHandler = impl->m_fileHandler;
 
@@ -189,38 +198,44 @@ struct BmpProxy::ProxyImpl
 
         // BMP Header validation
         const bool headerReadCorrectly = fileHandler.read(&impl->m_header, sizeof(m_header)) == 1;
-        if(!headerReadCorrectly)
+        if (!headerReadCorrectly)
             throw InvalidBmpHeaderError();
-        if(impl->m_header.Signature != COMPRESSED_SIGNATURE) // Check Signature = 'BA'
-            throw InvalidBmpHeaderError(std::string("Unexpected signature: ") + std::to_string(impl->m_header.Signature));
-        if(impl->m_header.FileSize != actualFileSize)
+        if (impl->m_header.Signature != COMPRESSED_SIGNATURE) // Check Signature = 'BA'
+            throw InvalidBmpHeaderError(
+                    std::string("Unexpected signature: ") + std::to_string(impl->m_header.Signature));
+        if (impl->m_header.FileSize != actualFileSize)
             throw InvalidBmpHeaderError(std::string("File size mismatch: ") +
-                "actual[" + std::to_string(actualFileSize) + "] != expected[" + std::to_string(impl->m_header.FileSize) + "]"
-            );
-        if(impl->m_header.IndexOffset < INFO_HEADER_OFFSET + sizeof(BmpInfoHeader))
-            throw InvalidBmpHeaderError(std::string("Invalid Index Offset: ") + std::to_string(impl->m_header.IndexOffset));
-        if(impl->m_header.DataOffset < impl->m_header.IndexOffset)
-            throw InvalidBmpHeaderError(std::string("Invalid Data Offset: ") + std::to_string(impl->m_header.DataOffset));
+                                        "actual[" + std::to_string(actualFileSize) + "] != expected[" + std::to_string(
+                                                impl->m_header.FileSize) + "]"
+                    );
+        if (impl->m_header.IndexOffset < INFO_HEADER_OFFSET + sizeof(BmpInfoHeader))
+            throw InvalidBmpHeaderError(
+                    std::string("Invalid Index Offset: ") + std::to_string(impl->m_header.IndexOffset));
+        if (impl->m_header.DataOffset < impl->m_header.IndexOffset)
+            throw InvalidBmpHeaderError(
+                    std::string("Invalid Data Offset: ") + std::to_string(impl->m_header.DataOffset));
 
         // BMP Info Header validation
         const bool infoHeaderReadCorrectly = fileHandler.read(&impl->m_infoHeader, sizeof(m_infoHeader)) == 1;
-        if(!infoHeaderReadCorrectly)
+        if (!infoHeaderReadCorrectly)
             throw InvalidInfoHeaderError();
-        if(impl->m_infoHeader.Size < sizeof(BmpInfoHeader)) // Can be > sizeof(BmpInfoHeader) in new bmp versions
-            throw InvalidInfoHeaderError(std::string("Incorrect InfoHeader Size: " + std::to_string(impl->m_infoHeader.Size)));
-        if(impl->m_infoHeader.BitsPerPixel != 8)
+        if (impl->m_infoHeader.Size < sizeof(BmpInfoHeader)) // Can be > sizeof(BmpInfoHeader) in new bmp versions
+            throw InvalidInfoHeaderError(
+                    std::string("Incorrect InfoHeader Size: " + std::to_string(impl->m_infoHeader.Size)));
+        if (impl->m_infoHeader.BitsPerPixel != 8)
             throw InvalidInfoHeaderError(std::string("Only 8bit Bmp pictures are supported"));
 
         const std::size_t colorTableOffset = INFO_HEADER_OFFSET + impl->m_infoHeader.Size;
         constexpr std::size_t bmpColorInfoSize = sizeof(std::uint32_t); // Bmp Color Structure
 
-        if(impl->m_header.IndexOffset < colorTableOffset + impl->m_infoHeader.ColorsUsed * bmpColorInfoSize)
-            throw InvalidBmpHeaderError(std::string("Invalid Index Offset: ") + std::to_string(impl->m_header.IndexOffset));
+        if (impl->m_header.IndexOffset < colorTableOffset + impl->m_infoHeader.ColorsUsed * bmpColorInfoSize)
+            throw InvalidBmpHeaderError(
+                    std::string("Invalid Index Offset: ") + std::to_string(impl->m_header.IndexOffset));
 
         // Read Index Data
         std::vector<std::uint8_t> indexData(impl->m_infoHeader.Height / DynamicBitset::BITS_PER_BLOCK, 0x00);
         fileHandler.seek(SEEK_SET, impl->m_header.IndexOffset);
-        if(fileHandler.read(indexData.data(), indexData.size()) != 1)
+        if (fileHandler.read(indexData.data(), indexData.size()) != 1)
             throw InvalidPixelDataError("Unable to read Index Data");
         impl->m_index = std::make_unique<RowIndex>(std::move(indexData));
 
@@ -228,7 +243,7 @@ struct BmpProxy::ProxyImpl
         impl->m_pixelData.resize(impl->m_infoHeader.ImageSize, 0x00);
         fileHandler.seek(SEEK_SET, impl->m_header.DataOffset);
         const bool pixelDataReadCorrectly = fileHandler.read(impl->m_pixelData.data(), impl->m_pixelData.size()) == 1;
-        if(!pixelDataReadCorrectly)
+        if (!pixelDataReadCorrectly)
             throw InvalidPixelDataError("Unable to read Pixel Data");
 
         return impl;
@@ -265,7 +280,7 @@ struct BmpProxy::ProxyImpl
     }
 
     [[nodiscard]]
-    const RowIndex * getRowIndex() const
+    const RowIndex* getRowIndex() const
     {
         return m_index.get();
     }
@@ -275,8 +290,8 @@ struct BmpProxy::ProxyImpl
     {
         m_fileHandler.seek(SEEK_SET);
         std::vector<std::uint8_t> dataCopied(offset, 0x00);
-        if(m_fileHandler.read(dataCopied.data(), dataCopied.size()) == 1)
-            if(dest.write(dataCopied.data(), dataCopied.size()) == 1)
+        if (m_fileHandler.read(dataCopied.data(), dataCopied.size()) == 1)
+            if (dest.write(dataCopied.data(), dataCopied.size()) == 1)
                 return true;
 
         return false;
@@ -290,8 +305,8 @@ struct BmpProxy::ProxyImpl
     std::vector<std::uint8_t> m_pixelData;
 };
 
-BmpProxy::BmpProxy(std::unique_ptr<ProxyImpl> pImpl)
-    : m_pImpl(std::move(pImpl))
+BmpProxy::BmpProxy(std::unique_ptr<ProxyImpl> pImpl) :
+    m_pImpl(std::move(pImpl))
 {
 }
 
@@ -305,8 +320,8 @@ BmpProxy BmpProxy::createFromBarch(const std::string& filePath)
     return BmpProxy{ProxyImpl::readBarch(filePath)};
 }
 
-BmpProxy::BmpProxy(BmpProxy && other) noexcept
-    : m_pImpl(std::move(other.m_pImpl))
+BmpProxy::BmpProxy(BmpProxy&& other) noexcept :
+    m_pImpl(std::move(other.m_pImpl))
 {
 }
 
@@ -342,23 +357,23 @@ std::size_t BmpProxy::getHeight() const
     return getInfoHeader().Height;
 }
 
-std::uint8_t * BmpProxy::getPixelData()
+std::uint8_t* BmpProxy::getPixelData()
 {
     return m_pImpl->getPixelData();
 }
 
-const std::uint8_t * BmpProxy::getPixelData() const
+const std::uint8_t* BmpProxy::getPixelData() const
 {
     return m_pImpl->getPixelData();
 }
 
-bool BmpProxy::provideRawImageData(RawImageData & out) const
+bool BmpProxy::provideRawImageData(RawImageData& out) const
 {
-    if(isCompressed())
+    if (isCompressed())
         return false;
 
     const auto* pixelData = getPixelData();
-    if(!pixelData)
+    if (!pixelData)
         return false;
 
     out.Width = static_cast<int>(getWidth());
@@ -368,14 +383,15 @@ bool BmpProxy::provideRawImageData(RawImageData & out) const
     return true;
 }
 
-bool BmpProxy::compress(const std::string& outputFilePath, IProgressNotifier * progressNotifier) const
+bool BmpProxy::compress(const std::string& outputFilePath, IProgressNotifier* progressNotifier) const
 {
-    if(isCompressed())
+    if (isCompressed())
         throw std::logic_error("File is already compressed");
 
-    FileHandler resultFile {outputFilePath, "wb"};
+    FileHandler resultFile{outputFilePath, "wb"};
 
-    auto rollbackFile = [&resultFile, &outputFilePath] {
+    auto rollbackFile = [&resultFile, &outputFilePath]
+    {
         const bool cantRollback = RollbackFile(outputFilePath, resultFile);
         assert(cantRollback && "Unable to rollback file correctly");
         return false;
@@ -386,12 +402,12 @@ bool BmpProxy::compress(const std::string& outputFilePath, IProgressNotifier * p
     header.IndexOffset = header.DataOffset; // Specify Index Offset at DataOffset
 
     RawImageData rawImageData{};
-    if(!provideRawImageData(rawImageData))
+    if (!provideRawImageData(rawImageData))
         return rollbackFile();
 
     try
     {
-        if(progressNotifier)
+        if (progressNotifier)
             progressNotifier->init(0, rawImageData.getActualHeight() << 1);
 
         RowIndex index = RowIndex::createFromRawImageData(rawImageData, progressNotifier);
@@ -401,16 +417,17 @@ bool BmpProxy::compress(const std::string& outputFilePath, IProgressNotifier * p
         DynamicBitset compressedPixelData(infoHeader.ImageSize, 0x00);
 
         std::size_t currentBitPos = 0;
-        for(int rowIndex = 0; rowIndex < rawImageData.getActualHeight(); ++rowIndex)
+        for (int rowIndex = 0; rowIndex < rawImageData.getActualHeight(); ++rowIndex)
         {
-            const auto * rawPixels = reinterpret_cast<const std::uint32_t*>(
+            const auto* rawPixels = reinterpret_cast<const std::uint32_t*>(
                 rawImageData.Data + rowIndex * rawImageData.getActualWidth()
             );
-            if(!index.testRowIsEmpty(rowIndex))
+            if (!index.testRowIsEmpty(rowIndex))
             {
-                for(int blockIndex = 0; blockIndex < rawImageData.getActualWidth() / sizeof(std::uint32_t); ++blockIndex)
+                for (int blockIndex = 0; blockIndex < rawImageData.getActualWidth() / sizeof(std::uint32_t); ++
+                     blockIndex)
                 {
-                    switch(const std::uint32_t blockValue = *rawPixels)
+                    switch (const std::uint32_t blockValue = *rawPixels)
                     {
                         case BLACK_4PIXELS:
                             compressedPixelData.set(currentBitPos++, true);
@@ -425,7 +442,8 @@ bool BmpProxy::compress(const std::string& outputFilePath, IProgressNotifier * p
                             compressedPixelData.set(currentBitPos++, true);
                             compressedPixelData.set(currentBitPos++, true);
 
-                            for(int bitIndex = 0; bitIndex < sizeof(std::uint32_t) * DynamicBitset::BITS_PER_BLOCK; ++bitIndex)
+                            for (int bitIndex = 0; bitIndex < sizeof(std::uint32_t) * DynamicBitset::BITS_PER_BLOCK; ++
+                                 bitIndex)
                             {
                                 const bool bitValue = (blockValue & 1 << bitIndex) != 0;
                                 compressedPixelData.set(currentBitPos++, bitValue);
@@ -436,7 +454,7 @@ bool BmpProxy::compress(const std::string& outputFilePath, IProgressNotifier * p
                 }
             }
 
-            if(progressNotifier)
+            if (progressNotifier)
             {
                 using namespace std::chrono_literals;
                 std::this_thread::sleep_for(1ms); // For progress bar demonstration
@@ -444,27 +462,27 @@ bool BmpProxy::compress(const std::string& outputFilePath, IProgressNotifier * p
             }
         }
 
-        if(!m_pImpl->copyUpToOffset(resultFile, header.IndexOffset))
+        if (!m_pImpl->copyUpToOffset(resultFile, header.IndexOffset))
             return rollbackFile();
 
         compressedPixelData.shrinkToFit();
         infoHeader.ImageSize = compressedPixelData.numBlocks();
         header.FileSize = resultFile.tell() + index.getIndexSizeInBytes() + compressedPixelData.numBlocks();
 
-        if(resultFile.write(index.getData(), index.getIndexSizeInBytes()) != 1)
+        if (resultFile.write(index.getData(), index.getIndexSizeInBytes()) != 1)
             return rollbackFile();
-        if(resultFile.write(compressedPixelData.data(), compressedPixelData.numBlocks()) != 1)
+        if (resultFile.write(compressedPixelData.data(), compressedPixelData.numBlocks()) != 1)
             return rollbackFile();
-        if(resultFile.tell() != header.FileSize)
+        if (resultFile.tell() != header.FileSize)
             return rollbackFile();
 
         resultFile.seek(SEEK_SET);
-        if(resultFile.write(&header, sizeof(BmpHeader)) != 1)
+        if (resultFile.write(&header, sizeof(BmpHeader)) != 1)
             return rollbackFile();
-        if(resultFile.write(&infoHeader, sizeof(BmpInfoHeader)) != 1)
+        if (resultFile.write(&infoHeader, sizeof(BmpInfoHeader)) != 1)
             return rollbackFile();
     }
-    catch( ... )
+    catch (...)
     {
         return rollbackFile();
     }
@@ -472,14 +490,15 @@ bool BmpProxy::compress(const std::string& outputFilePath, IProgressNotifier * p
     return true;
 }
 
-bool BmpProxy::decompress(const std::string& outputFilePath, IProgressNotifier * progressNotifier) const
+bool BmpProxy::decompress(const std::string& outputFilePath, IProgressNotifier* progressNotifier) const
 {
-    if(!isCompressed())
+    if (!isCompressed())
         throw std::logic_error("File is already uncompressed");
 
-    FileHandler resultFile {outputFilePath, "wb"};
+    FileHandler resultFile{outputFilePath, "wb"};
 
-    auto rollbackFile = [&resultFile, &outputFilePath] {
+    auto rollbackFile = [&resultFile, &outputFilePath]
+    {
         const bool cantRollback = RollbackFile(outputFilePath, resultFile);
         assert(cantRollback && "Unable to rollback file correctly");
         return false;
@@ -502,15 +521,15 @@ bool BmpProxy::decompress(const std::string& outputFilePath, IProgressNotifier *
 
         const std::size_t resultImageSize = infoHeader.Height * (infoHeader.Width + padding);
         std::vector<std::uint8_t> resultPixelData(resultImageSize, 0x00);
-        std::uint8_t * currentRowPtr = resultPixelData.data();
+        std::uint8_t* currentRowPtr = resultPixelData.data();
         std::uint32_t currentBitPos = 0;
 
-        if(progressNotifier)
+        if (progressNotifier)
             progressNotifier->init(0, static_cast<int>(infoHeader.Height));
 
-        for(int rowIndex = 0; rowIndex < infoHeader.Height; ++rowIndex)
+        for (int rowIndex = 0; rowIndex < infoHeader.Height; ++rowIndex)
         {
-            if(m_pImpl->getRowIndex()->testRowIsEmpty(rowIndex))
+            if (m_pImpl->getRowIndex()->testRowIsEmpty(rowIndex))
             {
                 std::memcpy(currentRowPtr, whiteRowPattern.data(), whiteRowPattern.size());
                 currentRowPtr += whiteRowPattern.size();
@@ -518,22 +537,22 @@ bool BmpProxy::decompress(const std::string& outputFilePath, IProgressNotifier *
             else
             {
                 int numBytesRestored = 0;
-                while(numBytesRestored < infoHeader.Width + padding)
+                while (numBytesRestored < infoHeader.Width + padding)
                 {
                     std::uint32_t block = BLACK_4PIXELS;
                     const bool b0 = pixelDataCompressed.test(currentBitPos++);
-                    if(b0 == false)
+                    if (b0 == false)
                     {
                         block = WHITE_4PIXELS;
                     }
                     else
                     {
                         const bool b1 = pixelDataCompressed.test(currentBitPos++);
-                        if(b1 == true)
+                        if (b1 == true)
                         {
-                            for(int i = 0; i < sizeof(std::uint32_t) * DynamicBitset::BITS_PER_BLOCK; ++i)
+                            for (int i = 0; i < sizeof(std::uint32_t) * DynamicBitset::BITS_PER_BLOCK; ++i)
                             {
-                                if(pixelDataCompressed.test(currentBitPos++))
+                                if (pixelDataCompressed.test(currentBitPos++))
                                     block |= 1 << i;
                             }
                         }
@@ -545,7 +564,7 @@ bool BmpProxy::decompress(const std::string& outputFilePath, IProgressNotifier *
                 }
             }
 
-            if(progressNotifier)
+            if (progressNotifier)
             {
                 using namespace std::chrono_literals;
                 std::this_thread::sleep_for(2ms); // For progress bar demonstration
@@ -555,24 +574,25 @@ bool BmpProxy::decompress(const std::string& outputFilePath, IProgressNotifier *
 
         pixelDataCompressed.clear();
 
-        if(!m_pImpl->copyUpToOffset(resultFile, header.DataOffset))
+        if (!m_pImpl->copyUpToOffset(resultFile, header.DataOffset))
             return rollbackFile();
 
         infoHeader.ImageSize = resultImageSize;
         header.FileSize = resultFile.tell() + resultImageSize;
 
         // Write Pixel Data uncompressed
-        if(resultFile.write(resultPixelData.data(), resultPixelData.size()) != 1)
+        if (resultFile.write(resultPixelData.data(), resultPixelData.size()) != 1)
             return rollbackFile();
-        if(resultFile.tell() != header.FileSize)
+        if (resultFile.tell() != header.FileSize)
             return rollbackFile();
 
         resultFile.seek(SEEK_SET);
-        if(resultFile.write(&header, sizeof(BmpHeader)) != 1)
+        if (resultFile.write(&header, sizeof(BmpHeader)) != 1)
             return rollbackFile();
-        if(resultFile.write(&infoHeader, sizeof(BmpInfoHeader)) != 1)
+        if (resultFile.write(&infoHeader, sizeof(BmpInfoHeader)) != 1)
             return rollbackFile();
-    } catch ( ... )
+    }
+    catch (...)
     {
         return rollbackFile();
     }

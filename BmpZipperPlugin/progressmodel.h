@@ -6,7 +6,8 @@
 #include <qqmlintegration.h>
 #include <iostream>
 
-namespace BmpZipper::Ui {
+namespace BmpZipper::Ui
+{
 
 class ProgressModel : public QObject, public IProgressNotifier
 {
@@ -20,18 +21,24 @@ public:
     explicit ProgressModel(QObject* parent = nullptr);
 
     void init(int min, int max) override;
+
     void notifyProgress(int current) override;
 
     int min() const;
+
     int max() const;
 
     const QString& getText() const;
-    void setText(const QString& _text);
+
+    void setText(const QString& text);
 
 signals:
     void progressChanged(int);
+
     void minValueChanged(int);
+
     void maxValueChanged(int);
+
     void textChanged(const QString&);
 
 private:

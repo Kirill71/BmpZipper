@@ -10,7 +10,7 @@
 #include <QCommandLineParser>
 #include <QCommandLineOption>
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     const QGuiApplication app(argc, argv);
     QQuickStyle::setStyle("Basic");
@@ -20,19 +20,19 @@ int main(int argc, char *argv[])
     parser.addHelpOption();
     parser.addVersionOption();
     const QCommandLineOption dirOption(
-        QStringList() << "d" << "dir"
-        ,QCoreApplication::translate("main", "Scan bmp, barch and png files in <directory>.")
-        ,QCoreApplication::translate("main", "directory"));
+            QStringList() << "d" << "dir"
+            , QCoreApplication::translate("main", "Scan bmp, barch and png files in <directory>.")
+            , QCoreApplication::translate("main", "directory"));
     parser.addOption(dirOption);
 
     parser.process(app);
 
     QString directoryToScanPath = QDir::currentPath();
-    if(parser.isSet(dirOption))
+    if (parser.isSet(dirOption))
     {
         const QString targetDir = parser.value(dirOption);
         const QFileInfo dirInfo(targetDir);
-        if(dirInfo.exists() || dirInfo.isDir())
+        if (dirInfo.exists() || dirInfo.isDir())
             directoryToScanPath = targetDir;
     }
 

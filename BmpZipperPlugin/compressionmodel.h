@@ -5,7 +5,8 @@
 #include <QObject>
 #include <qqmlintegration.h>
 
-namespace BmpZipper::Ui {
+namespace BmpZipper::Ui
+{
 
 class CompressionModel : public QObject
 {
@@ -17,6 +18,7 @@ public:
     explicit CompressionModel(QObject* parent = nullptr);
 
     Q_INVOKABLE void compress(const QString& filePath);
+
     Q_INVOKABLE void decompress(const QString& filePath);
 
 signals:
@@ -24,6 +26,7 @@ signals:
 
 private:
     void setProgressModel(ProgressModel* model);
+
     ProgressModel* getProgressModel();
 
 private:

@@ -4,7 +4,8 @@
 #include <string>
 #include <memory>
 
-namespace BmpZipper {
+namespace BmpZipper
+{
 
 struct IProgressNotifier;
 struct BmpHeader;
@@ -21,7 +22,9 @@ public:
     static BmpProxy createFromBarch(const std::string& filePath);
 
     BmpProxy(BmpProxy&& other) noexcept;
-    BmpProxy& operator= (const BmpProxy& other) = delete;
+
+    BmpProxy& operator=(const BmpProxy& other) = delete;
+
     ~BmpProxy() noexcept;
 
     [[nodiscard]]
@@ -46,7 +49,7 @@ public:
     std::uint8_t* getPixelData();
 
     [[nodiscard]]
-    const std::uint8_t * getPixelData() const;
+    const std::uint8_t* getPixelData() const;
 
     [[nodiscard]]
     bool provideRawImageData(RawImageData& out) const;
@@ -55,11 +58,12 @@ public:
     bool compress(const std::string& outputFilePath, IProgressNotifier* progressNotifier = nullptr) const;
 
     [[nodiscard]]
-    bool decompress(const std::string& outputFilePath, IProgressNotifier * progressNotifier = nullptr) const;
+    bool decompress(const std::string& outputFilePath, IProgressNotifier* progressNotifier = nullptr) const;
 
 private:
     struct ProxyImpl;
     std::unique_ptr<ProxyImpl> m_pImpl;
+
     explicit BmpProxy(std::unique_ptr<ProxyImpl> pImpl);
 };
 

@@ -2,7 +2,8 @@
 
 #include <cstdint>
 
-namespace BmpZipper {
+namespace BmpZipper
+{
 
 #pragma pack(push, 1)
 struct BmpHeader
@@ -54,7 +55,7 @@ struct RawImageData
 
     int Width; // image width in pixels
     int Height; // image height in pixels
-    const unsigned char * Data; // Pointer to image data. data[j * width + i] is color of pixel in row j and column i.
+    const unsigned char* Data; // Pointer to image data. data[j * width + i] is color of pixel in row j and column i.
 };
 
 }
