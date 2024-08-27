@@ -28,15 +28,7 @@ The encoded file has `*.barch` extension. File format is specified as original
 
 # Build and Run
 
-To build application CMake build system configured with Ninja binaries.
-Main directory InterviewPocketBook contains next scripts:
-* build.sh <ninja_path> <qt_binaries_path>
-* run.sh
-* clean.sh
-
-The project is compiled with Qt 6.7.2 Version. Ninja and CMAKE_PREFIX_PATH (the path to Qt binaries, for example ~/Qt/6.7.2/gcc_64) should be specified for build.sh script.
-
-Alternatively, you can use `Make` just add the path to your Qt binaries, ninja and working directory to the variables `QT_BINARIES_PATH`, `NINJA_PATH` and `WORK_DIR` in `Makefile`
+You can use `Make` just add the path to your Qt binaries, ninja and working directory to the variables `QT_BINARIES_PATH`, `NINJA_PATH` and `WORK_DIR` in `Makefile`
 and then you will be able to use a simple `Make`-based interface such as:
 ```shell
     make clean
